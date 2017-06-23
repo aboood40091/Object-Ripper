@@ -6,7 +6,7 @@
 
 """gtx_extract.py: Decode GFD (GTX) images."""
 
-import os, struct, sys, time
+import math, os, struct, sys, time
 
 __author__ = "AboodXD"
 __copyright__ = "Copyright 2014 Treeki, 2015-2017 AboodXD"

@@ -10,7 +10,7 @@
 
 """obj_rip.py: Rip objects from a Tileset."""
 
-import os, platform, struct, sys
+import json, os, platform, struct, sys
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 Qt = QtCore.Qt
@@ -244,7 +244,8 @@ def ripObj(data):
 
     Tileset.slot = Tileset.objects[0].tiles[0][0][2] & 3
 
-    print('')
+    for object in Tileset.objects:
+        object.jsonData = {}
 
     count = 0
     for object in Tileset.objects:
@@ -340,25 +341,29 @@ def ripObj(data):
         Objbuffer = a
         Metabuffer = struct.pack('>HBBxB', (0 if count == 0 else len(Objbuffer)), object.width, object.height, object.getRandByte())
 
-        print(curr_path + "/" + tile_name + "/object_" + str(count) + ".png")
-
         if not os.path.isdir(curr_path + "/" + tile_name):
             os.mkdir(curr_path + "/" + tile_name)
 
-        tex.save(curr_path + "/" + tile_name + "/object_" + str(count) + ".png", "PNG")
+        tex.save(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + ".png", "PNG")
 
-        with open(curr_path + "/" + tile_name + "/object_" + str(count) + ".colls", "wb+") as colls:
+        object.jsonData['img'] = tile_name + "_object_" + str(count) + ".png"
+
+        with open(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + ".colls", "wb+") as colls:
             colls.write(Tilebuffer)
 
-        with open(curr_path + "/" + tile_name + "/object_" + str(count) + ".objlyt", "wb+") as objlyt:
+        object.jsonData['colls'] = tile_name + "_object_" + str(count) + ".colls"
+
+        with open(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + ".objlyt", "wb+") as objlyt:
             objlyt.write(Objbuffer)
 
-        with open(curr_path + "/" + tile_name + "/object_" + str(count) + ".meta", "wb+") as meta:
+        object.jsonData['objlyt'] = tile_name + "_object_" + str(count) + ".objlyt"
+
+        with open(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + ".meta", "wb+") as meta:
             meta.write(Metabuffer)
 
-        count += 1
+        object.jsonData['meta'] = tile_name + "_object_" + str(count) + ".meta"
 
-    print('')
+        count += 1
 
     count = 0
     for object in Tileset.objects:
@@ -379,12 +384,19 @@ def ripObj(data):
 
         painter.end()
 
-        print(curr_path + "/" + tile_name + "/object_" + str(count) + "_nml.png")
-
         if not os.path.isdir(curr_path + "/" + tile_name):
             os.mkdir(curr_path + "/" + tile_name)
 
-        tex.save(curr_path + "/" + tile_name + "/object_" + str(count) + "_nml.png", "PNG")
+        tex.save(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + "_nml.png", "PNG")
+
+        object.jsonData['nml'] = tile_name + "_object_" + str(count) + "_nml.png"
+
+        count += 1
+
+    count = 0
+    for object in Tileset.objects:
+        with open(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + ".json", 'w+') as outfile:
+            json.dump(object.jsonData, outfile)
 
         count += 1
 

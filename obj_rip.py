@@ -249,7 +249,10 @@ def ripObj(data):
 
     count = 0
     for object in Tileset.objects:
-        tex = QtGui.QPixmap(object.width * 60, object.height * 60)
+        if object.randLen and (object.width, object.height) == (1, 1):
+            tex = QtGui.QPixmap(object.randLen * 60, object.height * 60)
+        else:
+            tex = QtGui.QPixmap(object.width * 60, object.height * 60)
         tex.fill(Qt.transparent)
         painter = QtGui.QPainter(tex)
 
@@ -260,17 +263,33 @@ def ripObj(data):
 
         for i in range(len(object.tiles)):
             for tile in object.tiles[i]:
-                if (Tileset.slot == 0) or ((tile[2] & 3) != 0):
-                    painter.drawPixmap(Xoffset, Yoffset, Tileset.tiles[tile[1]].image)
-                Tilebuffer += (Tileset.tiles[tile[1]].byte0).to_bytes(1, 'big')
-                Tilebuffer += (Tileset.tiles[tile[1]].byte1).to_bytes(1, 'big')
-                Tilebuffer += (Tileset.tiles[tile[1]].byte2).to_bytes(1, 'big')
-                Tilebuffer += (Tileset.tiles[tile[1]].byte3).to_bytes(1, 'big')
-                Tilebuffer += (Tileset.tiles[tile[1]].byte4).to_bytes(1, 'big')
-                Tilebuffer += (Tileset.tiles[tile[1]].byte5).to_bytes(1, 'big')
-                Tilebuffer += (Tileset.tiles[tile[1]].byte6).to_bytes(1, 'big')
-                Tilebuffer += (Tileset.tiles[tile[1]].byte7).to_bytes(1, 'big')
-                Xoffset += 60
+                if object.randLen and (object.width, object.height) == (1, 1):
+                    for z in range(object.randLen):
+                        if (Tileset.slot == 0) or ((tile[2] & 3) != 0):
+                            painter.drawPixmap(Xoffset, Yoffset, Tileset.tiles[tile[1] + z].image)
+                        Tilebuffer += (Tileset.tiles[tile[1] + z].byte0).to_bytes(1, 'big')
+                        Tilebuffer += (Tileset.tiles[tile[1] + z].byte1).to_bytes(1, 'big')
+                        Tilebuffer += (Tileset.tiles[tile[1] + z].byte2).to_bytes(1, 'big')
+                        Tilebuffer += (Tileset.tiles[tile[1] + z].byte3).to_bytes(1, 'big')
+                        Tilebuffer += (Tileset.tiles[tile[1] + z].byte4).to_bytes(1, 'big')
+                        Tilebuffer += (Tileset.tiles[tile[1] + z].byte5).to_bytes(1, 'big')
+                        Tilebuffer += (Tileset.tiles[tile[1] + z].byte6).to_bytes(1, 'big')
+                        Tilebuffer += (Tileset.tiles[tile[1] + z].byte7).to_bytes(1, 'big')
+                        Xoffset += 60
+                    break
+
+                else:
+                    if (Tileset.slot == 0) or ((tile[2] & 3) != 0):
+                        painter.drawPixmap(Xoffset, Yoffset, Tileset.tiles[tile[1]].image)
+                    Tilebuffer += (Tileset.tiles[tile[1]].byte0).to_bytes(1, 'big')
+                    Tilebuffer += (Tileset.tiles[tile[1]].byte1).to_bytes(1, 'big')
+                    Tilebuffer += (Tileset.tiles[tile[1]].byte2).to_bytes(1, 'big')
+                    Tilebuffer += (Tileset.tiles[tile[1]].byte3).to_bytes(1, 'big')
+                    Tilebuffer += (Tileset.tiles[tile[1]].byte4).to_bytes(1, 'big')
+                    Tilebuffer += (Tileset.tiles[tile[1]].byte5).to_bytes(1, 'big')
+                    Tilebuffer += (Tileset.tiles[tile[1]].byte6).to_bytes(1, 'big')
+                    Tilebuffer += (Tileset.tiles[tile[1]].byte7).to_bytes(1, 'big')
+                    Xoffset += 60
             Xoffset = 0
             Yoffset += 60
 
@@ -341,33 +360,39 @@ def ripObj(data):
         Objbuffer = a
         Metabuffer = struct.pack('>HBBxB', (0 if count == 0 else len(Objbuffer)), object.width, object.height, object.getRandByte())
 
-        if not os.path.isdir(curr_path + "/" + tile_name):
-            os.mkdir(curr_path + "/" + tile_name)
+        if not os.path.isdir(curr_path + "/" + tile_name + "_objects"):
+            os.mkdir(curr_path + "/" + tile_name + "_objects")
 
-        tex.save(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + ".png", "PNG")
+        tex.save(curr_path + "/" + tile_name + "_objects" + "/" + tile_name + "_object_" + str(count) + ".png", "PNG")
 
         object.jsonData['img'] = tile_name + "_object_" + str(count) + ".png"
 
-        with open(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + ".colls", "wb+") as colls:
+        with open(curr_path + "/" + tile_name + "_objects" + "/" + tile_name + "_object_" + str(count) + ".colls", "wb+") as colls:
             colls.write(Tilebuffer)
 
         object.jsonData['colls'] = tile_name + "_object_" + str(count) + ".colls"
 
-        with open(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + ".objlyt", "wb+") as objlyt:
+        with open(curr_path + "/" + tile_name + "_objects" + "/" + tile_name + "_object_" + str(count) + ".objlyt", "wb+") as objlyt:
             objlyt.write(Objbuffer)
 
         object.jsonData['objlyt'] = tile_name + "_object_" + str(count) + ".objlyt"
 
-        with open(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + ".meta", "wb+") as meta:
+        with open(curr_path + "/" + tile_name + "_objects" + "/" + tile_name + "_object_" + str(count) + ".meta", "wb+") as meta:
             meta.write(Metabuffer)
 
         object.jsonData['meta'] = tile_name + "_object_" + str(count) + ".meta"
 
         count += 1
 
+        if object.randLen and (object.width, object.height) == (1, 1):
+            object.jsonData['randLen'] = object.randLen
+
     count = 0
     for object in Tileset.objects:
-        tex = QtGui.QPixmap(object.width * 60, object.height * 60)
+        if object.randLen and (object.width, object.height) == (1, 1):
+            tex = QtGui.QPixmap(object.randLen * 60, object.height * 60)
+        else:
+            tex = QtGui.QPixmap(object.width * 60, object.height * 60)
         tex.fill(Qt.transparent)
         painter = QtGui.QPainter(tex)
 
@@ -376,18 +401,26 @@ def ripObj(data):
 
         for i in range(len(object.tiles)):
             for tile in object.tiles[i]:
-                if (Tileset.slot == 0) or ((tile[2] & 3) != 0):
-                    painter.drawPixmap(Xoffset, Yoffset, Tileset.tiles[tile[1]].normalmap)
-                Xoffset += 60
+                if object.randLen and (object.width, object.height) == (1, 1):
+                    for z in range(object.randLen):
+                        if (Tileset.slot == 0) or ((tile[2] & 3) != 0):
+                            painter.drawPixmap(Xoffset, Yoffset, Tileset.tiles[tile[1] + z].normalmap)
+                        Xoffset += 60
+                    break
+
+                else:
+                    if (Tileset.slot == 0) or ((tile[2] & 3) != 0):
+                        painter.drawPixmap(Xoffset, Yoffset, Tileset.tiles[tile[1]].normalmap)
+                    Xoffset += 60
             Xoffset = 0
             Yoffset += 60
 
         painter.end()
 
-        if not os.path.isdir(curr_path + "/" + tile_name):
-            os.mkdir(curr_path + "/" + tile_name)
+        if not os.path.isdir(curr_path + "/" + tile_name + "_objects"):
+            os.mkdir(curr_path + "/" + tile_name + "_objects")
 
-        tex.save(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + "_nml.png", "PNG")
+        tex.save(curr_path + "/" + tile_name + "_objects" + "/" + tile_name + "_object_" + str(count) + "_nml.png", "PNG")
 
         object.jsonData['nml'] = tile_name + "_object_" + str(count) + "_nml.png"
 
@@ -395,7 +428,7 @@ def ripObj(data):
 
     count = 0
     for object in Tileset.objects:
-        with open(curr_path + "/" + tile_name + "/" + tile_name + "_object_" + str(count) + ".json", 'w+') as outfile:
+        with open(curr_path + "/" + tile_name + "_objects" + "/" + tile_name + "_object_" + str(count) + ".json", 'w+') as outfile:
             json.dump(object.jsonData, outfile)
 
         count += 1
